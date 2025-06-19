@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Threading.Tasks;
-using MusicApp.Hubs;
 
 namespace MusicApp.Hubs
 {

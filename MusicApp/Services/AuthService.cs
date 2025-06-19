@@ -20,32 +20,45 @@ namespace MusicApp.Services
             _config = config;
         }
 
-        public async Task<string> RegisterAsync(RegisterDto dto)
+        // Registers a new user and assigns Admin role to a unique email address
+        // The unique email address can now assign Users Admin role
+        public async Task<string> RegisterAsync(RegisterDto dto)            
         {
             var user = new ApplicationUser
             {
                 FullName = dto.FullName,
                 UserName = dto.Email,
-                Email = dto.Email,
-                Role = dto.Role
+                Email = dto.Email             
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if(!result.Succeeded)
             {
                 return string.Join(", ", result.Errors.Select(e => e.Description));
+            }          
+
+            if (dto.Email.ToLower() == "excellentmmesom6@gmail.com.com")
+            {
+                await _userManager.AddToRoleAsync(user, "Admin");
             }
-            await _userManager.AddToRoleAsync(user, dto.Role);
-            return "User registered Successfully";
+            else
+            {
+                await _userManager.AddToRoleAsync(user, "User");
+            }
+            return "success";
         }
 
-        public async Task<string> LoginAsync(LoginDto dto)
+        // Logs in a user and returns a JWT token if successful
+        public async Task<AuthResult> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user.Email == null)
-                return "Invalid Email";
-            if (!await _userManager.CheckPasswordAsync(user, dto.Password))
-                return "Invalid Password";
+            if (user == null || user.Email == null)
+                return new AuthResult { Success = false, Message = "Invalid Email" };
+
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+            if (!isPasswordValid)
+                return new AuthResult { Success = false, Message = "Invalid Password" };
+            
             var roles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
@@ -69,7 +82,18 @@ namespace MusicApp.Services
                 audience: _config["Jwt:Audience"]
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new AuthResult
+            {
+                Success = true,
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                Message = "Login successful"
+            };
+
+           
+
         }
+
+        
+
     }
 }

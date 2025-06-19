@@ -1,4 +1,6 @@
-﻿namespace MusicApp.Models
+﻿using MusicApp.Enums;
+
+namespace MusicApp.Models
 {
     public class Appointment
     {
@@ -6,9 +8,10 @@
         public string UserId { get; set; } = string.Empty;
         public string ArtistId { get; set; } = string.Empty;
         public DateTime AppointmentDate { get; set; }
-        public string? Notes { get; set; }
+        public AppointmentStatus Status { get; set; } 
+        public string? UserNote { get; set; }
+        public string? ArtistNote { get; set; }
         public int DurationInMinutes { get; set; }
-        public string Status { get; set; } = "Pending";
         public ApplicationUser? User { get; set; }
         public ApplicationUser? Artist { get; set; }
     }

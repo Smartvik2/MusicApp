@@ -8,6 +8,8 @@ namespace MusicApp.Models
         public string? Role { get; set; }
         public bool IsActive { get; set; } = true;
         public ArtistProfile? ArtistProfile { get; set; }
+        public ICollection<Notification> Notifications { get; set; }
+
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MusicApp.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace MusicApp.Models
 {
@@ -11,13 +12,16 @@ namespace MusicApp.Models
         public ApplicationUser User { get; set; } = null!;
 
         [Required]
-        public string Genre { get; set; } = null!;
+        public GenreType Genre { get; set; }
 
         [Required]
         public int ExperienceInYears { get; set; }
 
         public string? Bio { get; set; }
-        public string? Availability { get; set; } 
+        public AvailabilityStatus Availability { get; set; } = AvailabilityStatus.Available;
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public string? PortfolioUrl { get; set; }
+        public bool IsApproved { get; set; } = false;
+        public string? RejectionReason { get; set; }
     }
 }

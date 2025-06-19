@@ -17,7 +17,7 @@ namespace MusicApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -249,19 +249,21 @@ namespace MusicApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ArtistNote")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("DurationInMinutes")
                         .HasColumnType("int");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserNote")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -270,6 +272,39 @@ namespace MusicApp.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("MusicApp.Models.ArtistPortfolio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("Portfolios");
                 });
 
             modelBuilder.Entity("MusicApp.Models.ArtistProfile", b =>
@@ -281,6 +316,7 @@ namespace MusicApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Availability")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
@@ -293,7 +329,13 @@ namespace MusicApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PortfolioUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RejectionReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
@@ -390,6 +432,9 @@ namespace MusicApp.Migrations
                     b.Property<int>("ArtistId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ArtistProfileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -407,6 +452,8 @@ namespace MusicApp.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
+
+                    b.HasIndex("ArtistProfileId");
 
                     b.HasIndex("ReviewerId");
 
@@ -492,6 +539,17 @@ namespace MusicApp.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MusicApp.Models.ArtistPortfolio", b =>
+                {
+                    b.HasOne("MusicApp.Models.ArtistProfile", "Artist")
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
+                });
+
             modelBuilder.Entity("MusicApp.Models.ArtistProfile", b =>
                 {
                     b.HasOne("MusicApp.Models.ApplicationUser", "User")
@@ -549,6 +607,10 @@ namespace MusicApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MusicApp.Models.ArtistProfile", null)
+                        .WithMany("Reviews")
+                        .HasForeignKey("ArtistProfileId");
+
                     b.HasOne("MusicApp.Models.ApplicationUser", "Reviewer")
                         .WithMany()
                         .HasForeignKey("ReviewerId")
@@ -558,6 +620,11 @@ namespace MusicApp.Migrations
                     b.Navigation("Artist");
 
                     b.Navigation("Reviewer");
+                });
+
+            modelBuilder.Entity("MusicApp.Models.ArtistProfile", b =>
+                {
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

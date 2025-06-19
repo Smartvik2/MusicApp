@@ -10,11 +10,14 @@ namespace MusicApp.Data
             : base(options) { }
 
         public DbSet<ArtistProfile> Artists => Set<ArtistProfile>();
-        //[HasNoKey]
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Message> Messages => Set<Message>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<ArtistPortfolio> Portfolios { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -64,6 +67,20 @@ namespace MusicApp.Data
                 .WithMany()
                 .HasForeignKey(r => r.ReviewerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Artist)
+                .WithMany()
+                .HasForeignKey(r => r.ArtistId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ArtistProfile>()
+                .Property(a => a.Genre)
+                .HasConversion<string>();
+
+            builder.Entity<ArtistProfile>()
+                .Property(a => a.Availability)
+                .HasConversion<string>();
         }
     }
 }

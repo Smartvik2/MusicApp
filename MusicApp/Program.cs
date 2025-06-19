@@ -7,9 +7,10 @@ using MusicApp.Hubs;
 using MusicApp.Interfaces;
 using MusicApp.Models;
 using MusicApp.Services;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+//using System.IdentityModel.Tokens.Jwt;
+//using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,9 +61,19 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IArtistService, ArtistService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // Enables string names
+    });
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -116,6 +127,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAll");
 app.MapHub<ChatHub>("/chathub");
+app.UseStaticFiles();
+
 
 app.MapControllers();
 

@@ -12,15 +12,15 @@ using MusicApp.Data;
 namespace MusicApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250614160611_Initial")]
-    partial class Initial
+    [Migration("20250616132032_Fixesss")]
+    partial class Fixesss
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -166,6 +166,9 @@ namespace MusicApp.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ArtistProfileId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -221,6 +224,8 @@ namespace MusicApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ArtistProfileId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -247,8 +252,14 @@ namespace MusicApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("DurationInMinutes")
+                        .HasColumnType("int");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -272,6 +283,7 @@ namespace MusicApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Availability")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
@@ -453,6 +465,15 @@ namespace MusicApp.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MusicApp.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("MusicApp.Models.ArtistProfile", "ArtistProfile")
+                        .WithMany()
+                        .HasForeignKey("ArtistProfileId");
+
+                    b.Navigation("ArtistProfile");
                 });
 
             modelBuilder.Entity("MusicApp.Models.Appointment", b =>

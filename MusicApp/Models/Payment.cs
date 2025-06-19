@@ -7,14 +7,17 @@ namespace MusicApp.Models
         [Key]
         public int Id { get; set; }
 
-        public string UserId { get; set; } = string.Empty;
+        public string StripePaymentId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;  // Who made the payment
         public int AppointmentId { get; set; }             // What the payment was for
-        public decimal Amount { get; set; }                
+        public long Amount { get; set; }
+        public string ArtistId { get; set; } = string.Empty; // Who the payment is for (artist)
+        public string Currency { get; set; } = "USD";
         public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "Pending";    
-        public string? TransactionId { get; set; }         
-        public string? PaymentMethod { get; set; }         
+        public string? TransactionId { get; set; }                
         public ApplicationUser? User { get; set; }
+        public ApplicationUser? Artist { get; set; }
         public Appointment? Appointment { get; set; }
         
 
