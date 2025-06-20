@@ -20,16 +20,22 @@ namespace MusicApp.Controllers
         [HttpPost("book-appointment")]
         public async Task<IActionResult> BookAppointment([FromBody] CreateAppointmentDto dto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-                return NotFound(new { Message = "User not found" });
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                    return NotFound(new { message = "User not found" });
 
-            var appointmentId = await _service.BookAppointmentAsync(userId, dto);
+                var appointmentId = await _service.BookAppointmentAsync(userId, dto);
+                if (appointmentId > 0)
+                    return Ok(new { message = "Appointment booked", appointmentId });
 
-            if (appointmentId > 0)
-                return Ok(new { message = "Appointment booked", appointmentId });
-
-            return BadRequest("Booking failed.");
+                return BadRequest(new { message = "Booking failed" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error booking appointment", error = ex.Message });
+            }
         }
 
 
@@ -40,11 +46,19 @@ namespace MusicApp.Controllers
             [FromQuery] string? status = null,
             [FromQuery] string? sort = "desc")
         {
-            var UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (UserId == null)
-                return NotFound(new { Message = "User appointment not found" });
-            var appointments = await _service.GetUserAppointmentsAsync(UserId, page, pageSize);
-            return Ok(appointments);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                    return NotFound(new { message = "User not found" });
+
+                var appointments = await _service.GetUserAppointmentsAsync(userId, page, pageSize);
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching appointments", error = ex.Message });
+            }
         }
 
         [Authorize(Roles = "Artist")]
@@ -54,18 +68,38 @@ namespace MusicApp.Controllers
             [FromQuery] string? status = null,
             [FromQuery] string? sort = "desc")
         {
-            var artistId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var appointments = await _service.GetArtistAppointmentsAsync(artistId, page, pageSize);
-            return Ok(appointments);
+            try
+            {
+                var artistId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (artistId == null)
+                    return NotFound(new { message = "Artist not found" });
+
+                var appointments = await _service.GetArtistAppointmentsAsync(artistId, page, pageSize);
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching artist appointments", error = ex.Message });
+            }
         }
 
         [HttpPost("Handle-appointments")]
         [Authorize(Roles = "Artist")]
         public async Task<IActionResult> HandleAppointment([FromBody] AppointmentActionDto dto)
         {
-            var artistId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _service.HandleAppointmentActionAsync(dto, artistId);
-            return Ok(result);
+            try
+            {
+                var artistId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (artistId == null)
+                    return NotFound(new { message = "Artist not found" });
+
+                var result = await _service.HandleAppointmentActionAsync(dto, artistId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error handling appointment", error = ex.Message });
+            }
         }
 
 

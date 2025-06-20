@@ -20,11 +20,19 @@ namespace MusicApp.Controllers
         [Authorize(Roles = "User")]
         public async Task<IActionResult> CreateArtist([FromBody] CreateArtistDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null) return Unauthorized("Invalid.");
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return Unauthorized(new { message = "Invalid user." });
 
-            var result = await _artistService.RequestArtist(userId, dto);
-            return Ok(new { message = result });
+                var result = await _artistService.RequestArtist(userId, dto);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error creating artist profile", error = ex.Message });
+            }
         }       
 
 
@@ -32,8 +40,15 @@ namespace MusicApp.Controllers
         [Authorize(Roles = "Artist")]
         public async Task<IActionResult> UpdateArtist([FromBody] UpdateArtistDto dto)
         {
-            var result = _artistService.UpdateArtistAsync(dto);
-            return Ok(new { message = result });
+            try
+            {
+                var result = await _artistService.UpdateArtistAsync(dto);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error updating artist profile", error = ex.Message });
+            }
         }      
 
         [HttpGet("search-artists")]
@@ -47,8 +62,15 @@ namespace MusicApp.Controllers
             [FromQuery] double? minRating = null,
             [FromQuery] string? sort = null)
         {
-            var artists = await _artistService.GetArtistsAsync(page, pageSize, name, id, genre, availability,minRating, sort);
-            return Ok(artists);
+            try
+            {
+                var artists = await _artistService.GetArtistsAsync(page, pageSize, name, id, genre, availability, minRating, sort);
+                return Ok(artists);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching artists", error = ex.Message });
+            }
         }
 
 

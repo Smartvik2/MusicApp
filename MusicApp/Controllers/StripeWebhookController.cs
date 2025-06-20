@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MusicApp.Data;
-using Stripe;
 using Microsoft.EntityFrameworkCore;
+using MusicApp.Data;
 using MusicApp.Interfaces;
+using Newtonsoft.Json.Linq;
+using Stripe;
 
 
 namespace MusicApp.Controllers
@@ -29,6 +30,11 @@ namespace MusicApp.Controllers
             var stripeSignature = Request.Headers["Stripe-Signature"];
             var webhookSecret = _config["Stripe:WebhookSecret"];
 
+            if (string.IsNullOrEmpty(webhookSecret))
+            {
+                return BadRequest("Webhook secret is not configured.");
+            }
+
             Event stripeEvent;
             try
             {
@@ -39,15 +45,22 @@ namespace MusicApp.Controllers
                 return BadRequest($"Webhook error: {ex.Message}");
             }
 
-            
+
+          
             if (stripeEvent.Type == "payment_intent.succeeded")
             {
-                var intent = stripeEvent.Data.Object as PaymentIntent;
+                
+                var paymentIntentData = stripeEvent.Data.Object as JObject;
+                var intent = paymentIntentData?.ToObject<PaymentIntent>();
+
+                if (intent == null)
+                    return BadRequest("Invalid payment intent data.");
                 var payment = await _context.Payments
                     .FirstOrDefaultAsync(p => p.StripePaymentId == intent.Id);
                 if (payment != null)
                 {
                     payment.Status = "Succeeded";
+                    payment.PaymentDate = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
 
                     await _notificationService.SendNotificationAsync(payment.UserId, "Your payment was successful", "Payment");

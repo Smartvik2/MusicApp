@@ -14,11 +14,13 @@ namespace MusicApp.Controllers
     {
         private readonly IPortfolioService _portfolioService;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<PortfolioController> _logger;
 
-        public PortfolioController(IPortfolioService portfolioService, ApplicationDbContext context)
+        public PortfolioController(IPortfolioService portfolioService, ApplicationDbContext context, ILogger<PortfolioController> logger)
         {
             _portfolioService = portfolioService;
             _context = context;
+            _logger = logger;
         }
 
 
@@ -31,21 +33,22 @@ namespace MusicApp.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User not authenticated");
 
-            if (dto.File == null || dto.File.Length == 0)
-                return BadRequest("No file uploaded.");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            const long MaxSizeInBytes = 6 * 1024 * 1024; // 6MB
-
-            if (dto.File.Length > MaxSizeInBytes)
-                return BadRequest("File size exceeds the 6MB limit.");
-
-            // Get artist profile for this user
-            var artist =  await _context.Artists.FirstOrDefaultAsync(a => a.UserId == userId);
-            if (artist == null)
-                return BadRequest("Artist profile not found");
-
-            var result = await _portfolioService.UploadPortfolioAsync(artist.Id, dto.File);
-            return Ok(result);
+            try
+            {
+                var artist = await _context.Artists.FirstOrDefaultAsync(a => a.UserId == userId);
+                if (artist == null)
+                    return BadRequest("Artist profile not found");
+                var result = await _portfolioService.UploadPortfolioAsync(artist.Id, dto.File);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading portfolio for user {UserId}", userId);
+                return StatusCode(500, new { message = "An error occurred while uploading the portfolio." });
+            }
         }
 
 
@@ -53,16 +56,36 @@ namespace MusicApp.Controllers
         [Authorize(Roles = "User, Artist, Admin")]
         public async Task<IActionResult> Get(int artistId)
         {
-            var result = await _portfolioService.GetPortfolioAsync(artistId);
-            return Ok(result);
+            try
+            {
+                var result = await _portfolioService.GetPortfolioAsync(artistId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching portfolio for artistId {ArtistId}", artistId);
+                return StatusCode(500, new { message = "An error occurred while retrieving the portfolio." });
+            }
         }
 
         [Authorize(Roles = "Artist")]
         [HttpDelete("{portfolioId}")]
         public async Task<IActionResult> Delete(int portfolioId)
         {
-            var result = await _portfolioService.DeletePortfolioAsync(portfolioId);
-            return Ok(result);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized("User not authenticated");
+
+                var result = await _portfolioService.DeletePortfolioAsync(portfolioId, userId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting portfolio {PortfolioId}", portfolioId);
+                return StatusCode(500, new { message = "An error occurred while deleting the portfolio." });
+            }
         }
     }
 }

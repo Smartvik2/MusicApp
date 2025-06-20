@@ -133,6 +133,7 @@ namespace MusicApp.Services
                     ArtistId = a.ArtistId,
                     AppointmentDate = a.AppointmentDate,
                     DurationInMinutes = a.DurationInMinutes,
+                    UserNote = a.UserNote,
                     Status = a.Status.ToString()                 
                 })
                 .ToListAsync();

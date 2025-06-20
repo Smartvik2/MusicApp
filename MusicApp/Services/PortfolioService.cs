@@ -61,10 +61,18 @@ namespace MusicApp.Services
 
         // Deletes a portfolio file for an artist
         // Only accessible to artists who own the portfolio
-        public async Task<string> DeletePortfolioAsync(int portfolioId)
+        public async Task<string> DeletePortfolioAsync(int portfolioId, string userId)
         {
-            var portfolio = await _context.Portfolios.FindAsync(portfolioId);
-            if (portfolio == null) return "Portfolio not found";
+            var portfolio = await _context.Portfolios
+                .Include(p => p.Artist)
+                .FirstOrDefaultAsync(p => p.Id == portfolioId);
+
+            
+            if (portfolio == null) 
+                return "Portfolio not found";
+
+            if (portfolio.Artist == null || portfolio.Artist.UserId != userId)
+                return "You are not authorized to delete this portfolio.";
 
             var filePath = Path.Combine(_env.WebRootPath, "portfolio", Path.GetFileName(portfolio.FileUrl));
             if (File.Exists(filePath))

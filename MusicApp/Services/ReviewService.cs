@@ -25,10 +25,7 @@ namespace MusicApp.Services
             if (dto.Rating < 1 || dto.Rating > 5)
                 return "Rating must be between 1 and 5";
 
-            var artist = await _context.Artists
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(a => a.User.FullName == dto.ArtistName);
-
+            var artist = await _context.Artists.FindAsync(dto.ArtistId);
             if (artist == null) return "Artist not found";
 
             var review = new Review

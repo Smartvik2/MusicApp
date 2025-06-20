@@ -21,18 +21,38 @@ namespace MusicApp.Controllers
         [HttpPost("submit-review")]
         public async Task<IActionResult> SubmitReview([FromBody] CreateReviewDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null)
-                return Unauthorized("Invalid user ID.");
-            var result = await _reviewService.SubmitReviewAsync(userId, dto);
-            return Ok(new { message = result });
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized("User not authenticated");
+
+                var result = await _reviewService.SubmitReviewAsync(userId, dto);
+                if (result != "Review submitted successfully")
+                    return BadRequest(new { message = result });
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while submitting the review: {ex.Message}");
+            }
         }
 
         [HttpGet("artist-reviews/{artistId}")]
         public async Task<IActionResult> GetReviewsForArtist(int artistId)
         {
-            var reviews = await _reviewService.GetReviewsForArtistAsync(artistId);
-            return Ok(reviews);
+            try
+            {
+
+                var reviews = await _reviewService.GetReviewsForArtistAsync(artistId);
+                if (reviews == null || !reviews.Any())
+                    return NotFound(new { message = "No reviews found for this artist." });
+                return Ok(reviews);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while retrieving reviews: {ex.Message}");
+            }
         }
     }
 }

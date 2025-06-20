@@ -27,34 +27,68 @@ namespace MusicApp.Controllers
         [HttpPost("create-intent")]
         public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentDto dto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var clientSecret = await _paymentService.CreatePaymentIntentAsync(userId, dto);
-            return Ok(new { clientSecret });
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var clientSecret = await _paymentService.CreatePaymentIntentAsync(userId, dto);
+                return Ok(new { clientSecret });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error creating payment intent.", error = ex.Message });
+            }
         }
 
         [HttpGet("user/history")]
         public async Task<IActionResult> GetUserPaymentHistory()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var history = await _paymentService.GetUserPaymentHistoryAsync(userId);
-            return Ok(history);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var history = await _paymentService.GetUserPaymentHistoryAsync(userId);
+                return Ok(history);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving payment history.", error = ex.Message });
+            }
         }
 
-        [HttpGet("artist/history")]
+        [HttpGet("artist/history-earnings")]
         [Authorize(Roles = "Artist")]
         public async Task<IActionResult> GetArtistEarnings()
         {
-            var artistId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var earnings = await _paymentService.GetArtistEarningsAsync(artistId);
-            return Ok(earnings);
+            try
+            {
+                var artistId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (artistId == null) return Unauthorized();
+
+                var earnings = await _paymentService.GetArtistEarningsAsync(artistId);
+                return Ok(earnings);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving artist earnings.", error = ex.Message });
+            }
         }
 
         [HttpGet("admin/history")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllPayments()
         {
-            var payments = await _paymentService.GetAllPaymentsAsync();
-            return Ok(payments);
+            try
+            {
+                var payments = await _paymentService.GetAllPaymentsAsync();
+                return Ok(payments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving all payments.", error = ex.Message });
+            }
         }
     }
 }
